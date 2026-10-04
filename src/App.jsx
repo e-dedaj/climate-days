@@ -1,11 +1,15 @@
-import { useState } from "react";
-import { searchCity } from "./api";
+import { useEffect, useState } from "react";
+import { searchCity, getDailyMax, START_YEAR, END_YEAR } from "./api";
 
 export default function App() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [city, setCity] = useState(null);
   const [searchError, setSearchError] = useState(null);
+
+  const [daily, setDaily] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [dataError, setDataError] = useState(null);
 
   async function onSearch(e) {
     e.preventDefault();
@@ -14,11 +18,26 @@ export default function App() {
     try {
       const found = await searchCity(query.trim());
       setResults(found);
-      if (found.length === 0) setSearchError("No city was found.");
+      if (found.length === 0) setSearchError("No city was found");
     } catch (err) {
-      setSearchError(err.message || "Unknown error.");
+      setSearchError(err.message || "Unknown error");
     }
   }
+
+  useEffect(() => {
+    if (!city) return;
+    let cancelled = false;
+    setLoading(true);
+    setDataError(null);
+    setDaily(null);
+    getDailyMax(city, START_YEAR, END_YEAR)
+      .then((d) => !cancelled && setDaily(d))
+      .catch((err) => !cancelled && setDataError(err.message || "unknown error"))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [city]);
 
   return (
     <main>
@@ -27,7 +46,7 @@ export default function App() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Enter a city..."
+          placeholder="Enter city"
         />
         <button type="submit">Search</button>
       </form>
@@ -45,7 +64,10 @@ export default function App() {
         ))}
       </ul>
 
-      {city && <p>Selected city: <strong>{city.name}</strong></p>}
+      {city && <h2>{city.name}</h2>}
+      {loading && <p>Loading…</p>}
+      {dataError && <p className="error">{dataError}</p>}
+      {daily && <p> {daily.time.length} days of data were loaded.</p>}
     </main>
   );
 }

@@ -26,3 +26,14 @@ export async function searchCity(name) {
     longitude: r.longitude,
   }));
 }
+export const START_YEAR = 1950;
+export const END_YEAR = new Date().getFullYear() - 1; // vetëm vite të plotë
+
+export async function getDailyMax(city, startYear, endYear) {
+  const url =
+    `https://archive-api.open-meteo.com/v1/archive?latitude=${city.latitude}` +
+    `&longitude=${city.longitude}&start_date=${startYear}-01-01&end_date=${endYear}-12-31` +
+    `&daily=temperature_2m_max&timezone=auto`;
+  const data = await fetchJson(url, 30000);
+  return data.daily;
+}
