@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { searchCity, getDailyMax, START_YEAR, END_YEAR } from "./api";
-import { daysAboveByYear } from "./analysis";
+import { daysAboveByYear, addTrend } from "./analysis";
+import DaysChart from "./DaysChart";
 
 export default function App() {
   const [query, setQuery] = useState("");
@@ -12,7 +13,10 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [dataError, setDataError] = useState(null);
   const threshold = 35;
-  const counts = useMemo(() => (daily ? daysAboveByYear(daily, threshold) : []), [daily]);
+  const { points, perDecade } = useMemo(
+    () => (daily ? addTrend(daysAboveByYear(daily, threshold)) : { points: [], perDecade: 0 }),
+    [daily]
+  );
 
   async function onSearch(e) {
     e.preventDefault();
@@ -70,17 +74,14 @@ export default function App() {
       {city && <h2>{city.name}</h2>}
       {loading && <p>Loading…</p>}
       {dataError && <p className="error">{dataError}</p>}
-      {counts.length > 0 && (
-        <table>
-          <thead>
-            <tr><th>Viti</th><th>Days above {threshold}°C</th></tr>
-          </thead>
-          <tbody>
-            {counts.map((c) => (
-              <tr key={c.year}><td>{c.year}</td><td>{c.days}</td></tr>
-            ))}
-          </tbody>
-        </table>
+      {points.length > 0 && (
+        <>
+          <DaysChart data={points} threshold={threshold} />
+          <p>
+            Trend: {perDecade >= 0 ? "+" : ""}
+            {perDecade.toFixed(1)} days per decade (regresion linear).
+          </p>
+        </>
       )}
     </main>
   );
