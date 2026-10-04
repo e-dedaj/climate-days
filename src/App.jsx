@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { searchCity, getDailyMax, START_YEAR, END_YEAR } from "./api";
 import { daysAboveByYear, addTrend } from "./analysis";
 import DaysChart from "./DaysChart";
@@ -12,11 +12,28 @@ export default function App() {
   const [daily, setDaily] = useState(null);
   const [loading, setLoading] = useState(false);
   const [dataError, setDataError] = useState(null);
-  const threshold = 35;
-  const { points, perDecade } = useMemo(
-    () => (daily ? addTrend(daysAboveByYear(daily, threshold)) : { points: [], perDecade: 0 }),
-    [daily]
-  );
+  const [threshold, setThreshold] = useState(35);
+
+  const requestId = useRef(0);
+
+  const load = useCallback(async (c) => {
+    const id = ++requestId.current;
+    setLoading(true);
+    setDataError(null);
+    setDaily(null);
+    try {
+      const d = await getDailyMax(c, START_YEAR, END_YEAR);
+      if (id === requestId.current) setDaily(d);
+    } catch (err) {
+      if (id === requestId.current) setDataError(err.message || "unknown error");
+    } finally {
+      if (id === requestId.current) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (city) load(city);
+  }, [city, load]);
 
   async function onSearch(e) {
     e.preventDefault();
@@ -25,30 +42,22 @@ export default function App() {
     try {
       const found = await searchCity(query.trim());
       setResults(found);
-      if (found.length === 0) setSearchError("No city was found");
+      if (found.length === 0) setSearchError("No city found.");
     } catch (err) {
-      setSearchError(err.message || "Unknown error");
+      setSearchError(err.message || "unknown error");
     }
   }
 
-  useEffect(() => {
-    if (!city) return;
-    let cancelled = false;
-    setLoading(true);
-    setDataError(null);
-    setDaily(null);
-    getDailyMax(city, START_YEAR, END_YEAR)
-      .then((d) => !cancelled && setDaily(d))
-      .catch((err) => !cancelled && setDataError(err.message || "unknown error"))
-      .finally(() => !cancelled && setLoading(false));
-    return () => {
-      cancelled = true;
-    };
-  }, [city]);
+  const { points, perDecade } = useMemo(
+    () => (daily ? addTrend(daysAboveByYear(daily, threshold)) : { points: [], perDecade: 0 }),
+    [daily, threshold]
+  );
 
   return (
     <main>
       <h1>Climate Days</h1>
+      <p>How many days per year exceed a certain temperature in the selected city?</p>
+
       <form onSubmit={onSearch}>
         <input
           value={query}
@@ -72,14 +81,31 @@ export default function App() {
       </ul>
 
       {city && <h2>{city.name}</h2>}
-      {loading && <p>Loading…</p>}
-      {dataError && <p className="error">{dataError}</p>}
-      {points.length > 0 && (
+      {loading && <p>Loading ({START_YEAR}–{END_YEAR})…</p>}
+
+      {dataError && (
+        <p className="error">
+          {dataError} <button onClick={() => city && load(city)}>Try again</button>
+        </p>
+      )}
+
+      {daily && (
         <>
+          <label>
+            Threshold: <strong>{threshold}°C</strong>
+            <input
+              type="range"
+              min={25}
+              max={42}
+              value={threshold}
+              onChange={(e) => setThreshold(Number(e.target.value))}
+              style={{ display: "block", width: "100%" }}
+            />
+          </label>
           <DaysChart data={points} threshold={threshold} />
           <p>
             Trend: {perDecade >= 0 ? "+" : ""}
-            {perDecade.toFixed(1)} days per decade (regresion linear).
+            {perDecade.toFixed(1)} days per decade (regresion linear, Does not test causation.).
           </p>
         </>
       )}
