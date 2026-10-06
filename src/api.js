@@ -3,6 +3,9 @@ async function fetchJson(url, timeoutMs = 15000) {
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, { signal: controller.signal });
+    if (res.status === 429) {
+      throw new Error("Too many requests. Try again later.");
+    }
     if (!res.ok) throw new Error(`API error (${res.status})`);
     return await res.json();
   } catch (e) {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { searchCity, getDailyMaxCached, START_YEAR, END_YEAR } from "./api";
+import { searchCity,getDailyMax, getDailyMaxCached, START_YEAR, END_YEAR } from "./api";
 import { daysAboveByYear, addTrend } from "./analysis";
 import DaysChart from "./DaysChart";
 
