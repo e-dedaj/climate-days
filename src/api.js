@@ -37,3 +37,27 @@ export async function getDailyMax(city, startYear, endYear) {
   const data = await fetchJson(url, 30000);
   return data.daily;
 }
+
+const CACHE_PREFIX = "climate-days:v1:";
+
+export async function getDailyMaxCached(city, startYear, endYear) {
+  const key = `${CACHE_PREFIX}${city.latitude},${city.longitude},${startYear}-${endYear}`;
+
+  // Try the cache first; a corrupted or unavailable cache must not break the app
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // ignore and fall through to the network request
+  }
+
+  const data = await getDailyMax(city, startYear, endYear);
+
+  // Best-effort write; storage may be full or disabled
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    // ignore: the app works without caching
+  }
+  return data;
+}

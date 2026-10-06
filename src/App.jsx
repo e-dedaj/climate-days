@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { searchCity, getDailyMax, START_YEAR, END_YEAR } from "./api";
+import { searchCity, getDailyMaxCached, START_YEAR, END_YEAR } from "./api";
 import { daysAboveByYear, addTrend } from "./analysis";
 import DaysChart from "./DaysChart";
 
@@ -17,6 +17,7 @@ export default function App() {
   const requestId = useRef(0);
 
   const load = useCallback(async (c) => {
+    const d = await getDailyMaxCached(c, START_YEAR, END_YEAR);
     const id = ++requestId.current;
     setLoading(true);
     setDataError(null);
