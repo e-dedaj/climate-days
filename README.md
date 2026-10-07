@@ -36,6 +36,9 @@ Open the URL printed in the terminal (usually http://localhost:5173). No API key
 - With only a few hot days per year, single years are noisy. Compare decades, not neighbouring years.
 - Missing values (null) are skipped, so a year with gaps may be undercounted.
 - Comparing two cities is only meaningful if the same threshold is used and both are represented by similar grid cells.
+## Preview
+<img width="1224" height="361" alt="Screenshot 2026-10-07 161311" src="https://github.com/user-attachments/assets/6d9ffecd-ac62-4941-b43f-babc55e63e8f" />
+<img width="1217" height="904" alt="Screenshot 2026-10-07 161344" src="https://github.com/user-attachments/assets/c1b24603-7677-4c66-a4e6-ba047ed10ad8" />
 
 ## Stack
 
