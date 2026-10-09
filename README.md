@@ -53,7 +53,6 @@ If loading fails, press **Try again**. If the message mentions too many requests
 - No comparison between two cities yet.
 - The cache never expires and each city takes about 480 kB, so after roughly ten cities localStorage fills up and caching stops silently.
 - The app depends on one large request per city. On the free API tier, many reloads in a short time can trigger rate limiting.
-- The interface is in one language (English or Albanian, depending on the current version).
 - No automated tests.
 
 ## Preview
