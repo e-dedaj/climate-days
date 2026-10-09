@@ -23,7 +23,7 @@ export default function App() {
     setDataError(null);
     setDaily(null);
     try {
-      const d = await getDailyMax(c, START_YEAR, END_YEAR);
+      const d = await getDailyMaxCached(c, START_YEAR, END_YEAR);
       if (id === requestId.current) setDaily(d);
     } catch (err) {
       if (id === requestId.current) setDataError(err.message || "unknown error");
