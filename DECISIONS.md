@@ -36,6 +36,10 @@ Three decisions that would be most expensive to reverse in Climate Days, with th
 
 **What it costs, and why it proved awkward.** While developing, the API answered `429 Too Many Requests`. Each reload, each retry and React's double effect run in development repeated the same heavy request, and the free tier counts large date ranges as several calls. The app then showed no data for that city. The fixes were a clear error message for 429, a retry button, a cache (decision 3), and the option to shorten the start year. The underlying design is unchanged: the app still depends on one large request succeeding, and a user on a shared network can hit the limit through no fault of their own.
 
+**What happens when the request fails.** The app shows an error message and a **Try again** button, and no chart. There are no partial results: the counts and the trend need the full history, so a failed request means no data for that city. Failed responses are never cached, so retrying always makes a new request.
+
+**When I would revisit this.** About 27,000 values per city is small enough for one request. It stops being a good fit if the app adds more variables (humidity, minimum temperature), a longer history, or comparison of several cities at once, because the response size and the rate-limit exposure grow together. At that point I would move to per-year requests, or to a small backend that fetches and stores the data once.
+
 **Reversal cost.** Medium to high. Moving to per-year requests or a backend changes the data flow in `App.jsx`, the loading and error states, and the caching.
 
 ---
@@ -56,5 +60,7 @@ Three decisions that would be most expensive to reverse in Climate Days, with th
 - Each city takes approximately 0.5 MB (the exact size depends on the JSON and the encoding), and localStorage allows only a few MB, so after roughly ten cities writes start failing. The code ignores that failure on purpose, so caching stops silently rather than showing an error.
 - The cache is per browser, so it does not reduce load on the API across users.
 - If the stored data shape changes, old entries must be invalidated by changing the `v1` prefix.
+
+**Expiry and refresh.** Cached entries never expire. There is no refresh button: a user who wants fresh data has to clear the `climate-days:*` keys in localStorage (browser DevTools, Application tab). This is acceptable for history that rarely changes, but the most recent year would stay stale. If this mattered, the fix is a timestamp stored with each entry and a maximum age (for example 30 days) checked in `getDailyMaxCached`.
 
 **Reversal cost.** Low. The cache sits in one function (`getDailyMaxCached`), so removing it or replacing it with IndexedDB or a proxy touches one file.

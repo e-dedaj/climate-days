@@ -32,13 +32,26 @@ If loading fails, press **Try again**. If the message mentions too many requests
 
 [Open-Meteo](https://open-meteo.com): Geocoding API for city search and Historical Weather API (daily maximum temperature, `temperature_2m_max`).
 
+## How the data is pulled and used
+
+1. The city name is sent to the Open-Meteo Geocoding API, which returns up to 5 matches with latitude and longitude.
+2. After the user picks a match, one request to the Historical Weather API fetches the daily maximum temperature from 1950 to the last full year.
+3. The response is two parallel arrays: dates and temperatures. The app counts, for each year, the days where the temperature is strictly above the threshold. Missing values (`null`) are skipped.
+4. A least-squares line is fitted through the yearly counts, and its slope is shown as days per decade.
+5. Moving the threshold slider repeats steps 3 and 4 on the data already in memory. It makes no new request.
 ## How failures are handled
 
-- Every request has a timeout (15 s for search, 30 s for historical data) and shows a clear message.
-- A `429 Too Many Requests` response shows a dedicated message asking the user to wait.
-- A failed data request shows an error with a "Try again" button.
-- Responses are cached in localStorage so repeated visits do not hit the API again.
-- Outdated responses are ignored if the user selects another city while one is loading.
+| Situation | What the user sees | What the app does |
+|---|---|---|
+| City search finds nothing | "No city found" message | No data request is made |
+| Search or data request times out (15 s / 30 s) | "Server is slow, try again" message | Request is aborted |
+| `429 Too Many Requests` | Message asking to wait a few minutes | No automatic retry, to avoid making the limit worse |
+| Any other HTTP error | Message with the status code | Nothing is cached |
+| Request fails | Error and a **Try again** button | Retry makes a new request |
+| User picks another city while one is loading | The newer city is shown | The older response is ignored when it arrives |
+| localStorage is full or disabled | Nothing visible | The app works without caching |
+
+Cached responses never expire. To force fresh data, clear the `climate-days:*` keys in the browser's localStorage.
 
 ## What this data does and does not support
 
