@@ -7,10 +7,10 @@ export default function DaysChart({ data, threshold }) {
         <ComposedChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="year" />
-          <YAxis allowDecimals={false} label={{ value: "Ditë/vit", angle: -90, position: "insideLeft" }} />
+          <YAxis allowDecimals={false} label={{ value: "Days/year", angle: -90, position: "insideLeft" }} />
           <Tooltip />
           <Bar dataKey="days" name={`Days above ${threshold}°C`} fill="#e4572e" />
-          <Line dataKey="trend" name="Trendi linear" type="linear" dot={false} stroke="#222" strokeWidth={2} />
+          <Line dataKey="trend" name="Linear Trend" type="linear" dot={false} stroke="#222" strokeWidth={2} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>

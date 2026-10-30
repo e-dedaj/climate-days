@@ -56,7 +56,7 @@ export default function App() {
 
   return (
     <main>
-      <h1>Climate Days</h1>
+      <h1>𝐇𝐞𝐚𝐭 𝐀𝐭𝐥𝐚𝐬</h1>
       <p>How many days per year exceed a certain temperature in the selected city?</p>
 
       <form onSubmit={onSearch}>
